@@ -5,270 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bank Logos</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding: 20px;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-        }
-        .controls {
-            text-align: center;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 500px;
-            margin: 0 auto 30px auto;
-        }
-        .search-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 15px;
-            border: 1px solid #ccc;
-            border-radius: 20px;
-            background-color: #f9f9f9;
-        }
-        .search-container img {
-            width: 16px;
-            height: 16px;
-            margin-right: 10px;
-            opacity: 0.6;
-        }
-        .search-container input {
-            border: none;
-            outline: none;
-            background: transparent;
-            font-size: 16px;
-            width: 100%;
-        }
-        .stats {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #666;
-            font-weight: bold;
-        }
-        
-        /* Category Header Styles */
-        .category-header {
-            background: #2c3e50;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin: 40px 0 20px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .category-header h2 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        /* Grid & Card Styles - No White Background */
-        .grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            margin-bottom: 40px;
-        }
         .card {
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            width: 140px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
-            transition: transform 0.2s;
+            justify-content: flex-start; /* Align logos to the top */
         }
-        .card:hover {
-            transform: scale(1.1);
+        .logo {
+            margin-bottom: 10px;
         }
-        .card img {
-            max-width: 100px;
-            max-height: 100px;
-            margin-bottom: 15px;
-            object-fit: contain;
-        }
-        .card .name {
-            font-size: 13px;
-            color: #444;
-            word-wrap: break-word;
-            font-weight: 600;
+        .name {
+            text-align: center;
         }
     </style>
 </head>
 <body>
-
-    <h1>Bank Logos</h1>
-    
-    <div class="controls">
-        <p style="margin-top: 0; font-size: 14px; color: #555;">Data is loaded automatically from GitHub.</p>
-        <div class="search-container">
-            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'></circle><line x1='21' y1='21' x2='16.65' y2='16.65'></line></svg>" alt="Search Logo">
-            <input type="text" id="searchInput" placeholder="Search for a bank by name..." disabled>
-        </div>
+    <div class="card">
+        <img src="logo1.png" class="logo" alt="Logo 1">
+        <div class="name">Bank Name 1</div>
     </div>
-
-    <div class="stats" id="stats">Loading data from GitHub... Please wait.</div>
-    <div id="resultsContainer"></div>
-
-    <script>
-        // --- YOUR PUBLIC GITHUB RAW URL ---
-        const GITHUB_JSON_URL = 'https://raw.githubusercontent.com/lucalukpc/luca/refs/heads/main/ucwInstitutionsMapping.json';
-        
-        let allInstitutions = [];
-
-        const topUSNames = [
-            "Chase Bank", "Bank of America", "Wells Fargo", "Citibank", "Capital One", 
-            "U.S. Bank", "PNC Bank", "TD Bank", "Discover", "Charles Schwab"
-        ];
-
-        const topCANames = [
-            "Royal Bank of Canada", "TD Canada Trust", "Scotiabank", "BMO", "CIBC", 
-            "National Bank of Canada", "Desjardins", "Tangerine", "ATB", "Simplii"
-        ];
-
-        // Fetch data automatically when the page loads
-        window.onload = function() {
-            fetch(GITHUB_JSON_URL)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    allInstitutions = data;
-                    document.getElementById('searchInput').disabled = false;
-                    processAndDisplay(allInstitutions);
-                })
-                .catch(error => {
-                    console.error('Error fetching JSON:', error);
-                    document.getElementById('stats').innerHTML = `<span style="color:red;">Failed to load JSON data from GitHub.</span>`;
-                });
-        };
-
-        // Handle Search Input
-        document.getElementById('searchInput').addEventListener('input', function(event) {
-            const searchTerm = event.target.value.toLowerCase();
-            const filteredInstitutions = allInstitutions.filter(inst => 
-                inst.name && inst.name.toLowerCase().includes(searchTerm)
-            );
-            processAndDisplay(filteredInstitutions);
-        });
-
-        function isCanadian(inst) {
-            const textToSearch = (inst.name + " " + (inst.url || "") + " " + (inst.keywords ? inst.keywords.join(" ") : "")).toLowerCase();
-            if (topCANames.some(caName => inst.name.toLowerCase().includes(caName.toLowerCase()))) return true;
-            if (textToSearch.includes(".ca/") || textToSearch.endsWith(".ca") || 
-                textToSearch.includes("canada") || textToSearch.includes("canadian") || 
-                textToSearch.includes("alberta") || textToSearch.includes("scotiabank") || 
-                textToSearch.includes("desjardins")) {
-                return true;
-            }
-            return false;
-        }
-
-        function isTopUS(name) { return topUSNames.some(topName => name.toLowerCase().includes(topName.toLowerCase())); }
-        function isTopCA(name) { return topCANames.some(topName => name.toLowerCase().includes(topName.toLowerCase())); }
-
-        function processAndDisplay(institutions) {
-            const resultsContainer = document.getElementById('resultsContainer');
-            const stats = document.getElementById('stats');
-            resultsContainer.innerHTML = ''; 
-
-            let categories = { topCA: [], topUS: [], allOthers: [] };
-
-            institutions.forEach(inst => {
-                if (inst.logo) {
-                    const isCA = isCanadian(inst);
-                    
-                    if (isCA && isTopCA(inst.name)) {
-                        categories.topCA.push(inst);
-                    } else if (!isCA && isTopUS(inst.name)) {
-                        categories.topUS.push(inst);
-                    } else {
-                        categories.allOthers.push(inst);
-                    }
-                }
-            });
-
-            // Remove duplicates 
-            const uniqueTopCA = getUniqueBanks(categories.topCA);
-            const uniqueTopUS = getUniqueBanks(categories.topUS);
-            const uniqueAllOthers = getUniqueBanks(categories.allOthers);
-
-            // 1. Render Canadian Banks First
-            renderCategory('Top 10 Canadian Banks', uniqueTopCA, resultsContainer);
-            
-            // 2. Render US Banks Second
-            renderCategory('Top 10 US Banks', uniqueTopUS, resultsContainer);
-
-            // 3. Render All Others Third
-            renderCategory('All Other Institutions', uniqueAllOthers, resultsContainer);
-
-            const totalShown = uniqueTopCA.length + uniqueTopUS.length + uniqueAllOthers.length;
-            stats.innerHTML = `Showing ${totalShown} total active logos.`;
-        }
-
-        // Helper function to remove duplicate names
-        function getUniqueBanks(banksArray) {
-            const uniqueNames = new Set();
-            return banksArray.filter(bank => {
-                const lowerName = bank.name.toLowerCase();
-                if (!uniqueNames.has(lowerName)) {
-                    uniqueNames.add(lowerName);
-                    return true;
-                }
-                return false;
-            });
-        }
-
-        function renderCategory(title, items, container) {
-            if (items.length === 0) return;
-
-            items.sort((a, b) => a.name.localeCompare(b.name));
-
-            const header = document.createElement('div');
-            header.className = 'category-header';
-            header.innerHTML = `<h2>${title}</h2> <span>${items.length} logos</span>`;
-            container.appendChild(header);
-
-            const grid = document.createElement('div');
-            grid.className = 'grid';
-
-            items.forEach(inst => {
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                const img = document.createElement('img');
-                img.src = inst.logo;
-                img.alt = inst.name;
-                img.title = inst.name;
-                img.loading = "lazy"; // Prevents browser crash on the "All Others" section
-
-                const name = document.createElement('div');
-                name.className = 'name';
-                name.textContent = inst.name;
-
-                card.appendChild(img);
-                card.appendChild(name);
-                grid.appendChild(card);
-            });
-
-            container.appendChild(grid);
-        }
-    </script>
+    <div class="card">
+        <img src="logo2.png" class="logo" alt="Logo 2">
+        <div class="name">Bank Name 2</div>
+    </div>
+    <div class="card">
+        <img src="logo3.png" class="logo" alt="Logo 3">
+        <div class="name">Bank Name 3</div>
+    </div>
 </body>
 </html>
