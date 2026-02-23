@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,11 +88,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-        justify-content: flex-start;
+            justify-content: flex-start;
             transition: transform 0.2s;
         }
-
-
         .card:hover {
             transform: scale(1.1);
         }
@@ -116,7 +113,7 @@
     <h1>Bank Logos</h1>
     
     <div class="controls">
-    
+        <p style="margin-top: 0; font-size: 14px; color: #555;">Data is loaded automatically from GitHub.</p>
         <div class="search-container">
             <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'></circle><line x1='21' y1='21' x2='16.65' y2='16.65'></line></svg>" alt="Search Logo">
             <input type="text" id="searchInput" placeholder="Search for a bank by name..." disabled>
@@ -134,12 +131,18 @@
 
         const topUSNames = [
             "Chase Bank", "Bank of America", "Wells Fargo", "Citibank", "Capital One", 
-            "U.S. Bank", "PNC Bank", "TD Bank", "Discover", "Charles Schwab"
+            "U.S. Bank", "PNC Bank", "TD Bank", "Discover", "Truist"
         ];
 
         const topCANames = [
             "Royal Bank of Canada", "TD Canada Trust", "Scotiabank", "BMO", "CIBC", 
             "National Bank of Canada", "Desjardins", "Tangerine", "ATB", "Simplii"
+        ];
+
+        const excludedKeywords = [
+            "investment", "insurance", "retirement", "401k", "401(k)", 
+            "wealth", "brokerage", "mortgage", "auto finance", "benefits", 
+            "advisors", "capital management", "life"
         ];
 
         // Fetch data automatically when the page loads
@@ -171,6 +174,16 @@
             processAndDisplay(filteredInstitutions);
         });
 
+        function isBank(inst) {
+            const nameLower = inst.name.toLowerCase();
+            for (let word of excludedKeywords) {
+                if (nameLower.includes(word)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         function isCanadian(inst) {
             const textToSearch = (inst.name + " " + (inst.url || "") + " " + (inst.keywords ? inst.keywords.join(" ") : "")).toLowerCase();
             if (topCANames.some(caName => inst.name.toLowerCase().includes(caName.toLowerCase()))) return true;
@@ -194,7 +207,7 @@
             let categories = { topCA: [], topUS: [], allOthers: [] };
 
             institutions.forEach(inst => {
-                if (inst.logo) {
+                if (inst.logo && isBank(inst)) {
                     const isCA = isCanadian(inst);
                     
                     if (isCA && isTopCA(inst.name)) {
@@ -222,10 +235,9 @@
             renderCategory('All Other Institutions', uniqueAllOthers, resultsContainer);
 
             const totalShown = uniqueTopCA.length + uniqueTopUS.length + uniqueAllOthers.length;
-            stats.innerHTML = `Showing ${totalShown} total active logos.`;
+            stats.innerHTML = `Showing ${totalShown} pure bank/credit union logos. Grouped by bank.`;
         }
 
-        // Helper function to remove duplicate names
         function getUniqueBanks(banksArray) {
             const uniqueNames = new Set();
             return banksArray.filter(bank => {
@@ -238,10 +250,44 @@
             });
         }
 
+        // NEW: Advanced Grouping Function to tie related institutions together
+        function getBaseBankName(name) {
+            const lowerName = name.toLowerCase();
+            
+            // Standardize Major Canadian Banks
+            if (lowerName.includes("rbc") || lowerName.includes("royal bank of canada")) return "RBC";
+            if (lowerName.includes("td ") || lowerName.includes("td bank") || lowerName.includes("td canada trust")) return "TD";
+            if (lowerName.includes("bmo") || lowerName.includes("bank of montreal")) return "BMO";
+            if (lowerName.includes("cibc") || lowerName.includes("canadian imperial bank")) return "CIBC";
+            if (lowerName.includes("scotia") || lowerName.includes("bank of nova scotia")) return "Scotiabank";
+            if (lowerName.includes("national bank of canada") || lowerName.includes("banque nationale")) return "National Bank of Canada";
+            
+            // Standardize Major US Banks
+            if (lowerName.includes("chase") || lowerName.includes("jpmorgan")) return "Chase";
+            if (lowerName.includes("bank of america") || lowerName.includes("bofa")) return "Bank of America";
+            if (lowerName.includes("wells fargo")) return "Wells Fargo";
+            if (lowerName.includes("citi")) return "Citibank";
+            if (lowerName.includes("capital one")) return "Capital One";
+
+            // Default: Group by the main name before any hyphens (e.g., "Chase - Auto" becomes "Chase")
+            return name.split(" - ")[0].split("-")[0].trim();
+        }
+
         function renderCategory(title, items, container) {
             if (items.length === 0) return;
 
-            items.sort((a, b) => a.name.localeCompare(b.name));
+            // NEW: Sort by the base bank name first, then by the specific institution name
+            items.sort((a, b) => {
+                const baseA = getBaseBankName(a.name);
+                const baseB = getBaseBankName(b.name);
+
+                // If they belong to the exact same parent bank, sort them alphabetically next to each other
+                if (baseA === baseB) {
+                    return a.name.localeCompare(b.name);
+                }
+                // Otherwise sort alphabetically by their base name
+                return baseA.localeCompare(baseB);
+            });
 
             const header = document.createElement('div');
             header.className = 'category-header';
@@ -259,7 +305,7 @@
                 img.src = inst.logo;
                 img.alt = inst.name;
                 img.title = inst.name;
-                img.loading = "lazy"; // Prevents browser crash on the "All Others" section
+                img.loading = "lazy";
 
                 const name = document.createElement('div');
                 name.className = 'name';
@@ -275,5 +321,3 @@
     </script>
 </body>
 </html>
-
-```
